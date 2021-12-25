@@ -12,6 +12,7 @@ const bot = new Client({ intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MES
 // on startup
 bot.on('ready', async () => {
     console.log(`${bot.user.username} is online`);
+    
     // Get crypto price from coingecko API
     const { data } = await axios.get(
         `https://api.coingecko.com/api/v3/simple/price?ids=dogecoin&vs_currencies=usd`
