@@ -48,6 +48,9 @@ bot.on('messageCreate', async (message) => {
             },{
                 name: "!rank <#>",
                 value: "See data on a specific rank"
+            },{
+                name: "!gas",
+                value: "See gas prices from etherscan"
             }]
         }
         message.channel.send({ embeds: [helpEmbed] });
@@ -234,59 +237,35 @@ bot.on('messageCreate', async (message) => {
         }
     }
 
-    // profile status
-    if (message.content.startsWith('!profile') && message.content.length == 7) {
-        // Get crypto price from coingecko API
+    // Track eth gas
+    if (message.content == '!gas') {
         const { data } = await axios.get(
-            `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=ethereum%2C%20dogecoin%2C%20shiba-inu&order=market_cap_desc&per_page=100&page=1&sparkline=false`
+            `http://ethgas.watch/api/gas`
         );
-        const stonksEmbed = {
+
+        const gasEmbed = {
             color: 2123412,
-            title: 'TO THE MOON!!',
+            title: "Ethereum gas prices",
+            description: "From " + data.sources[0].source.toString(),
             fields: [{
-                name: "Current",
-                value: "$" + data[0].current_price.toString()
+                name: "Slow",
+                value: data.slow.gwei + " gwei $" + data.slow.usd 
             },{
-                name: "All time high",
-                value: "$" + data[0].ath.toString()
+                name: "Normal",
+                value: data.normal.gwei + " gwei $" + data.normal.usd 
+            },{
+                name: "Fast",
+                value: data.fast.gwei + " gwei $" + data.fast.usd 
+            },{
+                name: "Instant",
+                value: data.instant.gwei + " gwei $" + data.instant.usd 
             }]
         }
-        message.channel.send({ embeds: [stonksEmbed] });
+
+        message.channel.send({ embeds: [gasEmbed] });
     }
 
     // calculator
-
-    // Reply to !price
-    if (message.content.startsWith('!price')) {
-        // Get the params
-        const [command, ...args] = message.content.split(' ');
-
-        // Check if there are two arguments present
-        if (args.length !== 2) {
-            return message.reply(
-                'You must provide the crypto and the currency to compare with!'
-            );
-        } else {
-            const [coin, vsCurrency] = args;
-            try {
-                // Get crypto price from coingecko API
-                const { data } = await axios.get(
-                    `https://api.coingecko.com/api/v3/simple/price?ids=${coin}&vs_currencies=${vsCurrency}`
-                );
-
-                // Check if data exists
-                if (!data[coin][vsCurrency]) throw Error();
-
-                return message.reply(
-                    `The current price of 1 ${coin} = ${data[coin][vsCurrency]} ${vsCurrency}`
-                );
-            } catch (err) {
-                return message.reply(
-                    'Please check your inputs. For example: !price bitcoin usd'
-                );
-            }
-        }
-    }
 
 });
 
