@@ -41,13 +41,13 @@ bot.on('messageCreate', async (message) => {
                 value: "Check server status"
             },{
                 name: "!search <crypto>",
-                value: "See data on a specific crypto"
+                value: "See data on a specific crypto by searching its name"
             },{
                 name: "!ranklist",
                 value: "See the top 25 market ranking"
             },{
                 name: "!rank <#>",
-                value: "See data on a specific rank"
+                value: "See data on a specific rank within top 100"
             },{
                 name: "!gas",
                 value: "See gas prices from etherscan"
@@ -154,18 +154,20 @@ bot.on('messageCreate', async (message) => {
         }
     }
 
-    // get data on a specific crypto
-    async function getArgs(args) {
+    // search by name
+    if (msg.startsWith('!search')) {
+        const target = message.content.slice(8)
         try {
             const { data } = await axios.get(
-                `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${args}&order=market_cap_desc&per_page=100&page=1&sparkline=false`
+                // search using target
+                `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${target}&order=market_cap_desc&per_page=100&page=1&sparkline=false`
             );
             // Check if data exists
             if (!data) throw Error();
 
-            const argsEmbed = {
+            const searchEmbed = {
                 color: 2123412,
-                title: data[0].name,
+                title: data[0].name + " (" + data[0].symbol + ")",
                 description: "Rank #" + data[0].market_cap_rank,
                 thumbnail: {
                     url: data[0].image
@@ -179,34 +181,11 @@ bot.on('messageCreate', async (message) => {
                 }]
             }
 
-            message.channel.send({ embeds: [argsEmbed] });
+            message.channel.send({ embeds: [searchEmbed] });
+            return;
+
         } catch (err) {
-            message.channel.send("Something went wrong");
-        }
-    }
-
-    // search by name
-    if (msg.startsWith('!search')) {
-        const args = message.content.slice(8).split(" ");
-        const target = args.shift().toLowerCase();
-        try {
-            const { data } = await axios.get(
-                // 100 search results
-                `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false`
-            );
-            // Check if data exists
-            if (!data) throw Error();
-
-            for (var i = 0; i < data.length; i++) {
-                if (data[i].id == target || data[i].symbol == target) {
-                    getArgs(data[i].id);
-                    return;
-                }
-            }
-
-            message.channel.send("I couldn't find anything on " + message.content.slice(8));
-        } catch (err) {
-            message.channel.send("I couldn't find anything on " + message.content.slice(8));
+            message.channel.send("I couldn't find anything on " + target);
         }
     }
 
@@ -214,7 +193,7 @@ bot.on('messageCreate', async (message) => {
     if (msg.startsWith('!rank ')) {
         const args = message.content.slice(6).split(" ");
         const target = args.shift();
-        if (isNaN(target) || (target % 1 != 0)) {
+        if (isNaN(target) || (target % 1 != 0) || args.length > 0) {
             message.channel.send("Enter a valid number");
         }
         try {
@@ -226,8 +205,24 @@ bot.on('messageCreate', async (message) => {
             if (!data) throw Error();
 
             for (var i = 0; i < data.length; i++) {
-                if (data[i].market_cap_rank == target) {
-                    getArgs(data[i].id);
+                if (data[i].market_cap_rank == target){
+                    const rankEmbed = {
+                        color: 2123412,
+                        title: data[i].name + " (" + data[i].symbol + ")",
+                        description: "Rank #" + data[i].market_cap_rank,
+                        thumbnail: {
+                            url: data[i].image
+                        },
+                        fields: [{
+                            name: "Current",
+                            value: "$" + data[i].current_price.toString()
+                        },{
+                            name: "All time high",
+                            value: "$" + data[i].ath.toString()
+                        }]
+                    }
+
+                    message.channel.send({ embeds: [rankEmbed] });
                     return;
                 }
             }
