@@ -41,7 +41,7 @@ bot.on('messageCreate', async (message) => {
                 value: "Check server status"
             },{
                 name: "!search <crypto>",
-                value: "See data on a specific crypto by searching its name"
+                value: "See data on a specific crypto by searching its name or symbol"
             },{
                 name: "!ranklist",
                 value: "See the top 25 market ranking"
@@ -154,35 +154,39 @@ bot.on('messageCreate', async (message) => {
         }
     }
 
-    // search by name
+    // search by name or symbol (top 100)
     if (msg.startsWith('!search')) {
         const target = message.content.slice(8)
         try {
             const { data } = await axios.get(
-                // search using target
-                `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${target}&order=market_cap_desc&per_page=100&page=1&sparkline=false`
+                // 100 search results
+                `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false`
             );
             // Check if data exists
             if (!data) throw Error();
 
-            const searchEmbed = {
-                color: 2123412,
-                title: data[0].name + " (" + data[0].symbol.toUpperCase() + ")",
-                description: "Rank #" + data[0].market_cap_rank,
-                thumbnail: {
-                    url: data[0].image
-                },
-                fields: [{
-                    name: "Current",
-                    value: "$" + data[0].current_price.toString()
-                },{
-                    name: "All time high",
-                    value: "$" + data[0].ath.toString()
-                }]
+            for (var i = 0; i < data.length; i++) {
+                if (data[i].id == target.toLowerCase() || data[i].symbol == target.toLowerCase()) {
+                    const symbolEmbed = {
+                        color: 2123412,
+                        title: data[i].name + " (" + data[i].symbol.toUpperCase() + ")",
+                        description: "Rank #" + data[i].market_cap_rank,
+                        thumbnail: {
+                            url: data[i].image
+                        },
+                        fields: [{
+                            name: "Current",
+                            value: "$" + data[i].current_price.toString()
+                        },{
+                            name: "All time high",
+                            value: "$" + data[i].ath.toString()
+                        }]
+                    }
+        
+                    message.channel.send({ embeds: [symbolEmbed] });
+                    return;
+                }
             }
-
-            message.channel.send({ embeds: [searchEmbed] });
-            return;
 
         } catch (err) {
             message.channel.send("I couldn't find anything on " + target);
