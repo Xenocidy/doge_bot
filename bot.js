@@ -167,7 +167,7 @@ bot.on('messageCreate', async (message) => {
 
             const searchEmbed = {
                 color: 2123412,
-                title: data[0].name + " (" + data[0].symbol + ")",
+                title: data[0].name + " (" + data[0].symbol.toUpperCase() + ")",
                 description: "Rank #" + data[0].market_cap_rank,
                 thumbnail: {
                     url: data[0].image
@@ -208,7 +208,7 @@ bot.on('messageCreate', async (message) => {
                 if (data[i].market_cap_rank == target){
                     const rankEmbed = {
                         color: 2123412,
-                        title: data[i].name + " (" + data[i].symbol + ")",
+                        title: data[i].name + " (" + data[i].symbol.toUpperCase() + ")",
                         description: "Rank #" + data[i].market_cap_rank,
                         thumbnail: {
                             url: data[i].image
